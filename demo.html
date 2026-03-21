@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatou - AI Content Publisher for TikTok</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a14;--card:#12121f;--card2:#1a1a2e;--border:#252540;--red:#ff6b6b;--blue:#4facfe;--green:#34d399;--yellow:#fbbf24;--text:#e0e0ec;--muted:#7a7a9a;--white:#fff}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* Sidebar */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--card);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:10}
+.sidebar-logo{font-size:1.5rem;font-weight:700;color:var(--red);letter-spacing:3px;margin-bottom:4px}
+.sidebar-sub{color:var(--blue);font-size:.7rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:32px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;color:var(--muted);cursor:pointer;margin-bottom:4px;font-size:.9rem;transition:all .2s}
+.nav-item:hover,.nav-item.active{background:var(--card2);color:var(--white)}
+.nav-item.active{border-left:3px solid var(--red)}
+.nav-icon{width:18px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding-top:16px;border-top:1px solid var(--border)}
+.user-info{display:flex;align-items:center;gap:10px;padding:8px}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:var(--white)}
+.user-name{font-size:.85rem;color:var(--text)}
+.user-role{font-size:.7rem;color:var(--muted)}
+
+/* Main */
+.main{margin-left:240px;flex:1;padding:32px;min-height:100vh}
+.page-header{margin-bottom:28px}
+.page-title{font-size:1.6rem;font-weight:700;color:var(--white);margin-bottom:6px}
+.page-desc{color:var(--muted);font-size:.9rem}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
+.card-title{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.stat-value{font-size:1.8rem;font-weight:700;color:var(--white);margin-bottom:4px}
+.stat-label{font-size:.8rem;color:var(--muted)}
+.stat-change{font-size:.75rem;margin-top:6px}
+.stat-up{color:var(--green)}
+.stat-down{color:var(--red)}
+
+/* TikTok Connect */
+.connect-section{text-align:center;padding:40px 20px}
+.connect-icon{font-size:3rem;margin-bottom:16px}
+.connect-title{font-size:1.2rem;font-weight:600;color:var(--white);margin-bottom:8px}
+.connect-desc{color:var(--muted);font-size:.9rem;margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;border:none;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--red);color:var(--white)}
+.btn-primary:hover{background:#ff5252;transform:translateY(-1px)}
+.btn-blue{background:var(--blue);color:var(--white)}
+.btn-blue:hover{background:#3d9df0}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--muted);background:var(--card2)}
+.btn-green{background:var(--green);color:#0a0a14}
+.btn-green:hover{background:#2cc48a}
+.btn-sm{padding:8px 16px;font-size:.8rem}
+
+/* Connected state */
+.connected-badge{display:inline-flex;align-items:center;gap:6px;background:#34d39920;color:var(--green);padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:500}
+.dot-green{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+
+/* Upload area */
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:48px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:16px}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--blue);background:var(--blue)08}
+.upload-zone.has-file{border-color:var(--green);border-style:solid;background:var(--green)08}
+.upload-icon{font-size:2.5rem;margin-bottom:12px}
+.upload-text{color:var(--muted);font-size:.9rem}
+.upload-text strong{color:var(--text)}
+
+/* Form */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;font-weight:500}
+.form-input,.form-textarea,.form-select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:inherit;font-size:.9rem;outline:none;transition:border .2s}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--blue)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-select{appearance:none;cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.hashtag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hashtag{background:var(--blue)20;color:var(--blue);padding:4px 10px;border-radius:6px;font-size:.8rem}
+
+/* Schedule list */
+.schedule-list{display:flex;flex-direction:column;gap:12px}
+.schedule-item{display:flex;align-items:center;gap:16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px 18px;transition:all .2s}
+.schedule-item:hover{border-color:var(--muted)}
+.schedule-thumb{width:52px;height:52px;border-radius:8px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.schedule-info{flex:1}
+.schedule-name{font-size:.9rem;font-weight:600;color:var(--white);margin-bottom:3px}
+.schedule-meta{font-size:.78rem;color:var(--muted)}
+.schedule-status{padding:4px 10px;border-radius:6px;font-size:.75rem;font-weight:600;flex-shrink:0}
+.status-scheduled{background:var(--yellow)20;color:var(--yellow)}
+.status-published{background:var(--green)20;color:var(--green)}
+.status-draft{background:var(--muted)20;color:var(--muted)}
+.status-publishing{background:var(--blue)20;color:var(--blue)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--green);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--green);transform:translateY(100px);opacity:0;transition:all .4s ease;z-index:100}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-error{border-color:var(--red);color:var(--red)}
+
+/* Progress bar */
+.progress-bar{width:100%;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin:12px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--green));border-radius:3px;transition:width 1.5s ease}
+
+/* Modal overlay */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center}
+.modal-icon{font-size:3rem;margin-bottom:16px}
+.modal-title{font-size:1.2rem;font-weight:700;color:var(--white);margin-bottom:8px}
+.modal-desc{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+.modal-actions{display:flex;gap:12px;justify-content:center}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.fade-in{animation:fadeIn .4s ease}
+.pulsing{animation:pulse 1.5s ease infinite}
+
+/* Hidden */
+.hidden{display:none!important}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">CHATOU</div>
+    <div class="sidebar-sub">IA Content</div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('upload')" id="nav-upload">
+      <span class="nav-icon">📤</span> New video
+    </div>
+    <div class="nav-item" onclick="showPage('schedule')" id="nav-schedule">
+      <span class="nav-icon">📅</span> Scheduled
+    </div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="user-avatar">E</div>
+        <div>
+          <div class="user-name">Creator</div>
+          <div class="user-role">Free plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+    <div id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-desc">Overview of your TikTok publishing activity</div>
+      </div>
+
+      <!-- Connect Section (shown first) -->
+      <div class="card" id="connect-card">
+        <div class="connect-section">
+          <div class="connect-icon">🎵</div>
+          <div class="connect-title">Connect your TikTok account</div>
+          <div class="connect-desc">Link your TikTok account to start scheduling and publishing videos automatically.</div>
+          <button class="btn btn-primary" onclick="connectTikTok()">
+            🔗 Connect with TikTok
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Content (shown after connect) -->
+      <div id="dashboard-content" class="hidden">
+        <div class="card" style="margin-bottom:20px;padding:16px 24px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.5rem">🎵</span>
+            <div>
+              <div style="font-weight:600;color:var(--white)">@chatou_creator</div>
+              <div style="font-size:.8rem;color:var(--muted)">TikTok account</div>
+            </div>
+          </div>
+          <div class="connected-badge"><span class="dot-green"></span> Connected</div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-value">24</div>
+            <div class="stat-label">Videos published</div>
+            <div class="stat-change stat-up">↑ 12% this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">5</div>
+            <div class="stat-label">Scheduled</div>
+            <div class="stat-change stat-up">↑ 3 new</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">18.2K</div>
+            <div class="stat-label">Total views</div>
+            <div class="stat-change stat-up">↑ 24%</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">96%</div>
+            <div class="stat-label">Success rate</div>
+            <div class="stat-change stat-up">↑ stable</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📅 Recent publications</div>
+          <div class="schedule-list">
+            <div class="schedule-item">
+              <div class="schedule-thumb">🤖</div>
+              <div class="schedule-info">
+                <div class="schedule-name">5 AI facts you didn't know</div>
+                <div class="schedule-meta">Published today at 18:00 • 1,234 views</div>
+              </div>
+              <div class="schedule-status status-published">Published</div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-thumb">🧠</div>
+              <div class="schedule-info">
+                <div class="schedule-name">How ChatGPT actually works</div>
+                <div class="schedule-meta">Published yesterday at 12:00 • 3,891 views</div>
+              </div>
+              <div class="schedule-status status-published">Published</div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-thumb">🔮</div>
+              <div class="schedule-info">
+                <div class="schedule-name">AI predictions for 2026</div>
+                <div class="schedule-meta">Scheduled for tomorrow at 19:00</div>
+              </div>
+              <div class="schedule-status status-scheduled">Scheduled</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== UPLOAD PAGE ===== -->
+    <div id="page-upload" class="hidden">
+      <div class="page-header">
+        <div class="page-title">Upload new video</div>
+        <div class="page-desc">Upload your AI-generated video and schedule it for TikTok</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="card">
+            <div class="card-title">📁 Video file</div>
+            <div class="upload-zone" id="upload-zone" onclick="simulateUpload()">
+              <div class="upload-icon" id="upload-icon">☁️</div>
+              <div class="upload-text" id="upload-text">
+                <strong>Click to upload</strong> or drag and drop<br>
+                MP4 or MOV • Max 50MB
+              </div>
+            </div>
+            <div id="upload-progress" class="hidden">
+              <div style="display:flex;justify-content:space-between;font-size:.85rem">
+                <span style="color:var(--text)">chatou_ia_facts_ep12.mp4</span>
+                <span id="progress-pct" style="color:var(--blue)">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">⚙️ Publishing settings</div>
+            <div class="form-group">
+              <label class="form-label">Post type</label>
+              <select class="form-select">
+                <option>Direct publish to TikTok</option>
+                <option>Upload as draft</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Privacy</label>
+              <select class="form-select">
+                <option>Public - Everyone can see</option>
+                <option>Friends only</option>
+                <option>Private - Only me</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Allow comments</label>
+                <select class="form-select">
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Allow duets</label>
+                <select class="form-select">
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-title">✏️ Video details</div>
+            <div class="form-group">
+              <label class="form-label">Title / Caption</label>
+              <textarea class="form-textarea" placeholder="Write a catchy caption for your video..." id="video-title">5 incredible AI facts that will blow your mind 🤯🤖 #AI #ChatGPT #Tech #Facts</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hashtags</label>
+              <div class="hashtag-list">
+                <span class="hashtag">#AI</span>
+                <span class="hashtag">#ChatGPT</span>
+                <span class="hashtag">#Tech</span>
+                <span class="hashtag">#Facts</span>
+                <span class="hashtag">#FYP</span>
+                <span class="hashtag">#Viral</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📅 Schedule</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-input" id="sched-date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time</label>
+                <input type="time" class="form-input" value="18:00" id="sched-time">
+              </div>
+            </div>
+            <div style="margin-top:8px;font-size:.8rem;color:var(--muted)">
+              Tip: Best posting times are 12:00-14:00 and 18:00-21:00
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <button class="btn btn-blue" style="flex:1" onclick="scheduleVideo()">
+              📅 Schedule for later
+            </button>
+            <button class="btn btn-green" style="flex:1" onclick="publishNow()">
+              🚀 Publish now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCHEDULE PAGE ===== -->
+    <div id="page-schedule" class="hidden">
+      <div class="page-header">
+        <div class="page-title">Scheduled videos</div>
+        <div class="page-desc">Manage your upcoming TikTok publications</div>
+      </div>
+
+      <div class="card">
+        <div class="schedule-list" id="schedule-list">
+          <div class="schedule-item">
+            <div class="schedule-thumb">🤖</div>
+            <div class="schedule-info">
+              <div class="schedule-name">10 things AI can do better than humans</div>
+              <div class="schedule-meta">Tomorrow • 12:00 PM</div>
+            </div>
+            <div class="schedule-status status-scheduled">Scheduled</div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-thumb">💡</div>
+            <div class="schedule-info">
+              <div class="schedule-name">The future of work with AI</div>
+              <div class="schedule-meta">Mar 23 • 6:00 PM</div>
+            </div>
+            <div class="schedule-status status-scheduled">Scheduled</div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-thumb">🧬</div>
+            <div class="schedule-info">
+              <div class="schedule-name">AI in healthcare: 5 breakthroughs</div>
+              <div class="schedule-meta">Mar 24 • 7:00 PM</div>
+            </div>
+            <div class="schedule-status status-scheduled">Scheduled</div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-thumb">🎮</div>
+            <div class="schedule-info">
+              <div class="schedule-name">How AI is changing video games</div>
+              <div class="schedule-meta">Mar 25 • 5:00 PM</div>
+            </div>
+            <div class="schedule-status status-draft">Draft</div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-thumb">🔮</div>
+            <div class="schedule-info">
+              <div class="schedule-name">AI predictions for 2026</div>
+              <div class="schedule-meta">Published • Mar 20 at 7:00 PM</div>
+            </div>
+            <div class="schedule-status status-published">Published</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS PAGE ===== -->
+    <div id="page-settings" class="hidden">
+      <div class="page-header">
+        <div class="page-title">Settings</div>
+        <div class="page-desc">Configure your Chatou preferences</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔗 TikTok connection</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.8rem">🎵</span>
+            <div>
+              <div style="font-weight:600;color:var(--white)">@chatou_creator</div>
+              <div style="font-size:.8rem;color:var(--muted)">Connected via OAuth2 • Token valid until Dec 2026</div>
+            </div>
+          </div>
+          <div class="connected-badge"><span class="dot-green"></span> Connected</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📂 Default video source</div>
+        <div class="form-group">
+          <label class="form-label">Source folder</label>
+          <select class="form-select">
+            <option>Google Drive - /Chatou/Videos</option>
+            <option>Local folder</option>
+            <option>Dropbox</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🕐 Default posting schedule</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Default time slot 1</label>
+            <input type="time" class="form-input" value="12:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Default time slot 2</label>
+            <input type="time" class="form-input" value="18:00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TikTok Auth Modal -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <div class="modal-icon">🎵</div>
+    <div class="modal-title" id="modal-title">Connect to TikTok</div>
+    <div class="modal-desc" id="modal-desc">You will be redirected to TikTok to authorize Chatou to publish videos on your behalf.</div>
+    <div class="modal-actions" id="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="simulateAuth()">Authorize with TikTok</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// Set default date to tomorrow
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+document.getElementById('sched-date').value = tomorrow.toISOString().split('T')[0];
+
+// Navigation
+function showPage(page) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.getElementById('nav-' + page).classList.add('active');
+  document.getElementById('page-' + page).classList.add('fade-in');
+}
+
+// Toast
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' toast-error' : '');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Connect TikTok
+function connectTikTok() {
+  document.getElementById('auth-modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('auth-modal').classList.remove('show');
+}
+
+function simulateAuth() {
+  const m = document.getElementById('modal-title');
+  const d = document.getElementById('modal-desc');
+  const a = document.getElementById('modal-actions');
+  
+  m.textContent = 'Connecting...';
+  d.innerHTML = '<span class="pulsing">Authenticating with TikTok via OAuth2...</span>';
+  a.innerHTML = '';
+
+  setTimeout(() => {
+    m.textContent = '✅ Connected!';
+    d.textContent = 'Your TikTok account @chatou_creator has been successfully linked.';
+    a.innerHTML = '<button class="btn btn-green" onclick="finishConnect()">Go to Dashboard</button>';
+  }, 2200);
+}
+
+function finishConnect() {
+  closeModal();
+  document.getElementById('connect-card').classList.add('hidden');
+  document.getElementById('dashboard-content').classList.remove('hidden');
+  document.getElementById('dashboard-content').classList.add('fade-in');
+  showToast('✅ TikTok account connected successfully!');
+}
+
+// Upload simulation
+let uploaded = false;
+function simulateUpload() {
+  if (uploaded) return;
+  uploaded = true;
+  const zone = document.getElementById('upload-zone');
+  const prog = document.getElementById('upload-progress');
+  const fill = document.getElementById('progress-fill');
+  const pct = document.getElementById('progress-pct');
+  const icon = document.getElementById('upload-icon');
+  const text = document.getElementById('upload-text');
+
+  zone.style.display = 'none';
+  prog.classList.remove('hidden');
+
+  let w = 0;
+  const interval = setInterval(() => {
+    w += Math.random() * 15 + 5;
+    if (w >= 100) {
+      w = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        prog.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:1.2rem">✅</span><div><div style="font-weight:600;color:var(--white)">chatou_ia_facts_ep12.mp4</div><div style="font-size:.8rem;color:var(--muted)">12.4 MB • 0:42 • 1080×1920</div></div></div>';
+        showToast('✅ Video uploaded successfully!');
+      }, 400);
+    }
+    fill.style.width = w + '%';
+    pct.textContent = Math.round(w) + '%';
+  }, 200);
+}
+
+// Schedule video
+function scheduleVideo() {
+  const date = document.getElementById('sched-date').value;
+  const time = document.getElementById('sched-time').value;
+  showToast('📅 Video scheduled for ' + date + ' at ' + time);
+  
+  setTimeout(() => {
+    const list = document.getElementById('schedule-list');
+    const item = document.createElement('div');
+    item.className = 'schedule-item fade-in';
+    item.innerHTML = `
+      <div class="schedule-thumb">🤖</div>
+      <div class="schedule-info">
+        <div class="schedule-name">5 incredible AI facts that will blow your mind</div>
+        <div class="schedule-meta">${date} • ${time}</div>
+      </div>
+      <div class="schedule-status status-scheduled">Scheduled</div>
+    `;
+    list.insertBefore(item, list.firstChild);
+    showPage('schedule');
+  }, 1000);
+}
+
+// Publish now
+function publishNow() {
+  showToast('🚀 Publishing to TikTok...');
+  
+  setTimeout(() => {
+    showToast('✅ Video published successfully on TikTok!');
+    const list = document.getElementById('schedule-list');
+    const item = document.createElement('div');
+    item.className = 'schedule-item fade-in';
+    item.innerHTML = `
+      <div class="schedule-thumb">🤖</div>
+      <div class="schedule-info">
+        <div class="schedule-name">5 incredible AI facts that will blow your mind</div>
+        <div class="schedule-meta">Published just now</div>
+      </div>
+      <div class="schedule-status status-published">Published</div>
+    `;
+    list.insertBefore(item, list.firstChild);
+    showPage('schedule');
+  }, 2500);
+}
+</script>
+</body>
+</html>
